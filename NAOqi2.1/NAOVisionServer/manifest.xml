@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<package uuid="naovisionserver-d3be2f">
+ <names>
+  <name lang="en_US">NAOVisionServer</name>
+ </names>
+ <descriptionLanguages>
+  <language>en_US</language>
+ </descriptionLanguages>
+ <contents>
+  <behaviorContent path="NAOVisionServer">
+   <nature></nature>
+   <permissions/>
+  </behaviorContent>
+ </contents>
+</package>
