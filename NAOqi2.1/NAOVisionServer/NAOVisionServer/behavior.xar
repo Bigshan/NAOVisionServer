@@ -172,7 +172,7 @@ class MyClass(GeneratedClass):
                                         </Diagram>
                                     </BehaviorKeyframe>
                                 </BehaviorLayer>
-                                <BehaviorLayer name="ReqAndRes">
+                                <BehaviorLayer name="ReqAndRes" mute="1">
                                     <BehaviorKeyframe name="ReqAndRes" index="1">
                                         <Diagram>
                                             <Box name="Behavior Cilent" id="1" localization="8" tooltip="Behavior Cilent by shiqishan" x="159" y="233">
@@ -183,6 +183,7 @@ class MyClass(GeneratedClass):
 import struct
 import time
 import vision_definitions
+import base64
 class MyClass(GeneratedClass):
     def __init__(self):
         GeneratedClass.__init__(self)
@@ -202,7 +203,7 @@ class MyClass(GeneratedClass):
         self.startSocket()
         cameraID = 0
         self.videoProxy.setParam(vision_definitions.kCameraSelectID,cameraID)
-        subscriberID = self.videoProxy.subscribe("shiqishan", 7, 11, 5);
+        subscriberID = self.videoProxy.subscribe("shiqishan", 0, 11, 5);
         self.threadtime = self.getParameter("threadtime")
         while(self.bstart):
             cliSock,(self.addr, self.port) = self.sock.accept()
@@ -211,19 +212,20 @@ class MyClass(GeneratedClass):
             pieceSize = 1024
             while(self.baccept):
                 try:
-                    image = self.videoProxy.getImageRemote(subscriberID)
-                    size = len(image[6])
-                    self.logger.info("size of...%f",size)
-                    while(size>=0):
-                        piece = image[6].read(pieceSize)
-                        cliSock.sendto(piece,(self.addr, self.port))
-                        size -= pieceSize
-                        self.logger.info("1111111size of...%f",size)
-                    self.logger.info("size of...%f",size)
-                    cliSock.sendto("The Next",(self.addr, self.port))
+                    msg = cliSock.recv( 50 )
+                    if msg == "NVImageRequest":
+                        imageArr = self.videoProxy.getImageRemote(subscriberID)
+                        image = imageArr[6]
+                        self.logger.info("111111..111111")
+                        cliSock.sendall(image)
+                    elif msg == "NVImageClose":
+                        self.logger.info("22222222222222")
+                        cliSock.close()
+                        break
                 except:
+                    self.logger.info("3333333333333")
                     cliSock.close()
-                    self.baccept = False
+                    break
     def onInput_onStop(self):
         self.onUnload()
         self.sock.close()
@@ -251,12 +253,72 @@ class MyClass(GeneratedClass):
                                         </Diagram>
                                     </BehaviorKeyframe>
                                 </BehaviorLayer>
-                                <BehaviorLayer name="Behavior Cilent">
-                                    <BehaviorKeyframe name="Selection_off" index="1">
-                                        <Diagram />
-                                    </BehaviorKeyframe>
-                                    <BehaviorKeyframe name="Selection_on" index="36">
-                                        <Diagram />
+                                <BehaviorLayer name="behavior_layer1">
+                                    <BehaviorKeyframe name="keyframe1" index="1">
+                                        <Diagram>
+                                            <Box name="Behavior Cilent" id="1" localization="8" tooltip="Behavior Cilent by shiqishan" x="169" y="83">
+                                                <bitmap>media/images/box/box-diagram.png</bitmap>
+                                                <script language="4">
+                                                    <content>
+                                                        <![CDATA[import socket
+import struct
+import time
+import vision_definitions
+import base64
+class MyClass(GeneratedClass):
+    def __init__(self):
+        GeneratedClass.__init__(self)
+        self.memory = ALProxy("ALMemory")
+        self.motion = ALProxy("ALMotion")
+        self.postureProxy = ALProxy("ALRobotPosture")
+        self.videoProxy= ALProxy("ALVideoDevice")
+        self.threadtime = 0.2
+    def onLoad(self):
+        self.bstart = True
+        self.baccept = True
+        self.stifness_tem = 3
+    def onUnload(self):
+        self.bstart = False
+        self.baccept = False
+    def onInput_onStart(self):
+        self.startSocket()
+        cameraID = 0
+        self.videoProxy.setParam(vision_definitions.kCameraSelectID,cameraID)
+        subscriberID = self.videoProxy.subscribe("shiqishan", 0, 11, 5);
+        self.threadtime = self.getParameter("threadtime")
+        while(self.bstart):
+            try:
+                msg,(self.addr, self.port) = self.sock.recvfrom( 50 )
+                if msg == "NVImageRequest":
+                    imageArr = self.videoProxy.getImageRemote(subscriberID)
+                    image = imageArr[6]
+                    self.logger.info("111111..%s",self.port)
+                    size = 19200
+                    i = 0
+                    while i<=2:
+                        self.sock.sendto(image[i*size:(i+1)*size],(self.addr, self.port))
+                        i+=1
+
+            except:
+                self.logger.info("func bug....")
+                pass
+    def onInput_onStop(self):
+        self.onUnload()
+        self.sock.close()
+    def startSocket(self):
+        self.sock = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
+        self.sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        self.sock.bind( ('',47383))]]>
+</content>
+                                                </script>
+                                                <Input name="onLoad" type="1" type_size="1" nature="0" inner="1" tooltip="Signal sent when diagram is loaded." id="1" />
+                                                <Input name="onStart" type="1" type_size="1" nature="2" inner="0" tooltip="Box behavior starts when a signal is received on this input." id="2" />
+                                                <Input name="onStop" type="1" type_size="1" nature="3" inner="0" tooltip="Box behavior stops when a signal is received on this input." id="3" />
+                                                <Output name="outputText" type="3" type_size="1" nature="2" inner="0" tooltip="" id="4" />
+                                                <Parameter name="threadtime" inherits_from_parent="1" content_type="2" value="0.02" default_value="0.2" min="0" max="1" tooltip="" id="5" />
+                                            </Box>
+                                            <Link inputowner="1" indexofinput="2" outputowner="0" indexofoutput="1" />
+                                        </Diagram>
                                     </BehaviorKeyframe>
                                 </BehaviorLayer>
                             </Timeline>
